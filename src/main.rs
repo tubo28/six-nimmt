@@ -2,5 +2,5 @@ mod ui;
 
 fn main() {
     println!("Hello, world!");
-    ui::func();
+    // ui::func();
 }
