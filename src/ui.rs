@@ -2,23 +2,6 @@
 type Card = u8;
 type Score = u8;
 
-pub struct Field {
-    cards: [Vec<Card>; 4]
-}
-
-impl Field {
-    fn new_empty() -> Field {
-        Field {
-            cards: [
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-            ]
-        }
-    }
-}
-
 pub fn score(card: Card) -> Score {
     match card {
         55 => 7,
@@ -29,31 +12,48 @@ pub fn score(card: Card) -> Score {
     }
 }
 
+pub struct Field {
+    rows: [Vec<Card>; 4]
+}
+
+impl Field {
+    fn new_empty() -> Field {
+        Field {
+            rows: [
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+            ]
+        }
+    }
+}
+
 impl Field {
     pub fn place(&mut self, row: usize, card: Card) {
-        self.cards[row].push(card);
-        debug_assert!(self.cards[row].len() <= 6);
+        self.rows[row].push(card);
+        debug_assert!(self.rows[row].len() <= 6);
     }
 
     pub fn sum(&self, row: usize) -> Score {
-        self.cards[row].iter().cloned().map(score).sum()
+        self.rows[row].iter().cloned().map(score).sum()
     }
 
     pub fn gather(&mut self, row: usize) -> Score {
         let negative = self.sum(row);
-        self.cards[row].clear();
+        self.rows[row].clear();
         negative
     }
 
     pub fn get_row(&self, card: Card) -> Option<usize> {
         (0..4).filter(|&i| {
-            let back = self.cards[i].last().expect("empty row!");
+            let back = self.rows[i].last().expect("empty row!");
             *back < card
-        }).min_by_key(|&i| self.cards[i].last().expect("empty row!"))
+        }).min_by_key(|&i| self.rows[i].last().expect("empty row!"))
     }
 
     pub fn check_full(&self, row: usize) -> bool {
-        self.cards[row].len() == 6
+        self.rows[row].len() == 6
     }
 }
 
@@ -91,7 +91,7 @@ pub struct GameManager {
 
 impl GameManager {
     // ランダムに4枚選びフィールドに置く
-    fn init(&mut self, player_number: usize, cards: &Vec<Card>) {
+    fn initialize(&mut self, player_number: usize, cards: &Vec<Card>) {
         assert!(player_number * 10 + 4 <= cards.len());
 
         let n = player_number;
@@ -99,28 +99,34 @@ impl GameManager {
         self.field = Field::new_empty();
         self.players = (0..n).map(|_| Player { score: 0, cards: vec![] }).collect();
 
-        // assignes[i] == p ならば i 番目のカードをプレイヤー p にわたす
+        // assign[i] == p ならば i 番目のカードをプレイヤー p にわたす
         // n <= p < n + 4 ならフィールドの p - n 番目の列に置く
         // p == n + 4 なら山札に残す
-        let mut assignes = Vec::new();
+        let mut assign = Vec::new();
         for i in 0..n*10 {
-            assignes.push(i / 10);
+            assign.push(i / 10);
         }
         for i in 0..4 {
-            assignes.push(n + i);
+            assign.push(n + i);
         }
         for _ in 0..(cards.len() - n*10 - 4) {
-            assignes.push(n + 4)
+            assign.push(n + 4)
         }
+        debug_assert_eq!(cards.len(), assign.len());
 
-        // TODO: assignes をシャッフル
+        // TODO: assign をシャッフル
 
-        for (&p, &c) in assignes.iter().zip(cards.iter()) {
+        for (&p, &c) in assign.iter().zip(cards.iter()) {
             if p < n {
                 self.players[p].cards.push(c)
             } else if p < n + 4 {
-                self.field.cards[p - n].push(c);
+                self.field.rows[p - n].push(c);
             }
+        }
+
+        self.field.rows.sort();
+        for player in self.players.iter_mut() {
+            player.cards.sort();
         }
     }
 
