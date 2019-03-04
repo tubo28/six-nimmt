@@ -2,5 +2,7 @@ mod ui;
 
 fn main() {
     println!("Hello, world!");
-    // ui::func();
+    let seed = unimplemented!();
+    let gm = ui::GameManager::new(seed);
+    gm.run();
 }

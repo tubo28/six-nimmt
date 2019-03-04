@@ -1,5 +1,5 @@
 use rand::prelude::*;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 // TODO: 構造体でくるむ？
 pub type Card = u8;
@@ -17,10 +17,16 @@ pub fn score(card: Card) -> Score {
 }
 
 pub struct Field {
-    rows: [Vec<Card>; 4]
+    rows: [Vec<Card>; 4],
 }
 
 impl Field {
+    pub fn new() -> Field {
+        Field {
+            rows: [vec![], vec![], vec![], vec![]],
+        }
+    }
+
     /// 行 row にカード card を置く
     pub fn place(&mut self, row: usize, card: Card) {
         self.rows[row].push(card);
@@ -41,10 +47,12 @@ impl Field {
 
     /// 末尾のカードが card の数以下の最大の行を返す。
     pub fn max_lower(&self, card: Card) -> Option<usize> {
-        (0..4).filter(|&i| {
-            let back = self.rows[i].last().expect("empty row!");
-            *back < card
-        }).min_by_key(|&i| self.rows[i].last().expect("empty row!"))
+        (0..4)
+            .filter(|&i| {
+                let back = self.rows[i].last().expect("empty row!");
+                *back < card
+            })
+            .min_by_key(|&i| self.rows[i].last().expect("empty row!"))
     }
 
     pub fn is_full(&self, row: usize) -> bool {
@@ -92,7 +100,11 @@ impl Player {
             field.place(row, card);
         }
         // 手札から削除する
-        let pos = self.cards.iter().position(|&c| c == card).expect("no such card");
+        let pos = self
+            .cards
+            .iter()
+            .position(|&c| c == card)
+            .expect("no such card");
         let removed = self.cards.remove(pos);
         debug_assert_eq!(removed, card);
     }
@@ -106,26 +118,37 @@ pub struct GameManager {
 
 // TODO: 4, 6, 10 などのマジックナンバーを const にする
 impl GameManager {
+    pub fn new(seed: [u8; 32]) -> GameManager {
+        GameManager {
+            field: Field::new(),
+            players: Vec::new(),
+            rng: RefCell::new(StdRng::from_seed(seed)),
+        }
+    }
+
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, player_number: usize, cards: &Vec<Card>, seed: [u8; 32]) {
+    pub fn initialize(&mut self, player_number: usize, cards: &Vec<Card>) {
         assert!(player_number * 10 + 4 <= cards.len());
 
         // メンバの初期化
-        self.rng = RefCell::new(StdRng::from_seed(seed));
-        self.field = Field { rows: [
-            Vec::with_capacity(6),
-            Vec::with_capacity(6),
-            Vec::with_capacity(6),
-            Vec::with_capacity(6),
-        ] };
+        self.field = Field {
+            rows: [
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+                Vec::with_capacity(6),
+            ],
+        };
         self.players = {
-            let mut rand = StdRng::from_seed(seed);
-            (0..player_number).map(|_| {
-                let mut seed = seed.clone();
-                let r: u8 = rand.gen();
-                seed[0] ^= r;
-                Player::new(seed)
-            }).collect()
+            // let mut rng = self.rng.borrow_mut();
+            // let mut rand = StdRng::from_seed(unimplemented!());
+            // (0..player_number).map(|_| {
+            //     let mut seed = seed.clone();
+            //     let r: u8 = rand.gen();
+            //     seed[0] ^= r;
+            //     Player::new(seed)
+            // }).collect()
+            unimplemented!()
         };
 
         // フィールドとプレイヤーにカードを配る
@@ -135,13 +158,13 @@ impl GameManager {
         // n <= p < n + 4 ならフィールドの p - n 番目の列に置く
         // p == n + 4 なら山札に残す
         let mut assign = Vec::new();
-        for i in 0..n*10 {
+        for i in 0..n * 10 {
             assign.push(i / 10);
         }
         for i in 0..4 {
             assign.push(n + i);
         }
-        for _ in 0..(cards.len() - n*10 - 4) {
+        for _ in 0..(cards.len() - n * 10 - 4) {
             assign.push(n + 4)
         }
         debug_assert_eq!(cards.len(), assign.len());
@@ -163,7 +186,7 @@ impl GameManager {
         }
     }
 
-    /// ラウンドを 10 回回す
+    /// ラウンドを 10 回回す。
     pub fn run(&mut self) {
         for i in 0..10 {
             // TODO: log 系の crate を使う
@@ -177,7 +200,9 @@ impl GameManager {
     pub fn go_round(&mut self) {
         // 各プレイヤーはカードを選ぶ
         // Vec<(player id, Card)>
-        let mut moves: Vec<(usize, Card)> = self.players.iter()
+        let mut moves: Vec<(usize, Card)> = self
+            .players
+            .iter()
             .map(|player| player.think(&self.players, &self.field))
             .enumerate()
             .collect();
