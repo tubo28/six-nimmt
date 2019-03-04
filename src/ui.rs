@@ -1,7 +1,11 @@
-// TODO: 構造体でくるむ？
-type Card = u8;
-type Score = u8;
+use rand::prelude::*;
+use std::cell::{Cell, RefCell};
 
+// TODO: 構造体でくるむ？
+pub type Card = u8;
+pub type Score = u8;
+
+/// カードのスコアを求める
 pub fn score(card: Card) -> Score {
     match card {
         55 => 7,
@@ -17,88 +21,116 @@ pub struct Field {
 }
 
 impl Field {
-    fn new_empty() -> Field {
-        Field {
-            rows: [
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-                Vec::with_capacity(6),
-            ]
-        }
-    }
-}
-
-impl Field {
+    /// 行 row にカード card を置く
     pub fn place(&mut self, row: usize, card: Card) {
         self.rows[row].push(card);
         debug_assert!(self.rows[row].len() <= 6);
     }
 
+    /// 列 row のスコア合計
     pub fn sum(&self, row: usize) -> Score {
         self.rows[row].iter().cloned().map(score).sum()
     }
 
+    /// 列 row を回収して空にする。スコアの合計を返す。
     pub fn gather(&mut self, row: usize) -> Score {
-        let negative = self.sum(row);
+        let sum = self.sum(row);
         self.rows[row].clear();
-        negative
+        sum
     }
 
-    pub fn get_row(&self, card: Card) -> Option<usize> {
+    /// 末尾のカードが card の数以下の最大の行を返す。
+    pub fn max_lower(&self, card: Card) -> Option<usize> {
         (0..4).filter(|&i| {
             let back = self.rows[i].last().expect("empty row!");
             *back < card
         }).min_by_key(|&i| self.rows[i].last().expect("empty row!"))
     }
 
-    pub fn check_full(&self, row: usize) -> bool {
+    pub fn is_full(&self, row: usize) -> bool {
         self.rows[row].len() == 6
     }
 }
 
+#[derive(Clone)]
 pub struct Player {
     score: Score,
     cards: Vec<Card>,
+    rng: RefCell<StdRng>,
 }
 
 impl Player {
-    fn think(&self, others: &Vec<Player>, field: &Field) -> Card /* row */ {
-        0 // TODO
+    fn new(seed: [u8; 32]) -> Player {
+        Player {
+            score: 0,
+            cards: Vec::new(),
+            rng: RefCell::new(StdRng::from_seed(seed)),
+        }
+    }
+
+    // 思考して使うカードを選択する
+    fn think(&self, _others: &Vec<Player>, _field: &Field) -> Card {
+        use rand::seq::SliceRandom;
+        let mut rng = self.rng.borrow_mut();
+        self.cards[..].choose(&mut *rng).cloned().expect("no card")
     }
 
     // FIXME: プレイヤーとフィールドのどちらを主体と見るか微妙なのでグローバル関数のほうがいいかも
-    fn use_card(&mut self, card: Card, field: &mut Field) {
-        let row = field.get_row(card);
-        if let Some(r) = row {
-            field.place(r, card);
-            if field.check_full(r) {
-                let s = field.gather(r);
-                self.score += s;
+    fn consume_card(&mut self, card: Card, field: &mut Field) {
+        let mut rng = self.rng.borrow_mut();
+        let row = field.max_lower(card);
+        if let Some(row) = row {
+            // 置くべき列に置く
+            field.place(row, card);
+            if field.is_full(row) {
+                self.score += field.gather(row);
             }
         } else {
             // 置ける列がなかったので回収する列を選ぶ
-            let gather_row = 0; // TODO
-            field.place(gather_row, card);
+            let row = rng.gen_range(0, 3);
+            self.score += field.gather(row); // TODO
+            field.place(row, card);
         }
+        // 手札から削除する
+        let pos = self.cards.iter().position(|&c| c == card).expect("no such card");
+        let removed = self.cards.remove(pos);
+        debug_assert_eq!(removed, card);
     }
 }
 
 pub struct GameManager {
     field: Field,
     players: Vec<Player>,
+    rng: RefCell<StdRng>,
 }
 
+// TODO: 4, 6, 10 などのマジックナンバーを const にする
 impl GameManager {
-    // ランダムに4枚選びフィールドに置く
-    fn initialize(&mut self, player_number: usize, cards: &Vec<Card>) {
+    /// カードをプレイヤーに10枚配り、フィールドに4枚置く
+    pub fn initialize(&mut self, player_number: usize, cards: &Vec<Card>, seed: [u8; 32]) {
         assert!(player_number * 10 + 4 <= cards.len());
 
+        // メンバの初期化
+        self.rng = RefCell::new(StdRng::from_seed(seed));
+        self.field = Field { rows: [
+            Vec::with_capacity(6),
+            Vec::with_capacity(6),
+            Vec::with_capacity(6),
+            Vec::with_capacity(6),
+        ] };
+        self.players = {
+            let mut rand = StdRng::from_seed(seed);
+            (0..player_number).map(|_| {
+                let mut seed = seed.clone();
+                let r: u8 = rand.gen();
+                seed[0] ^= r;
+                Player::new(seed)
+            }).collect()
+        };
+
+        // フィールドとプレイヤーにカードを配る
         let n = player_number;
         // カードをシャッフルしてプレイヤーに配る
-        self.field = Field::new_empty();
-        self.players = (0..n).map(|_| Player { score: 0, cards: vec![] }).collect();
-
         // assign[i] == p ならば i 番目のカードをプレイヤー p にわたす
         // n <= p < n + 4 ならフィールドの p - n 番目の列に置く
         // p == n + 4 なら山札に残す
@@ -114,7 +146,8 @@ impl GameManager {
         }
         debug_assert_eq!(cards.len(), assign.len());
 
-        // TODO: assign をシャッフル
+        let mut rng = self.rng.borrow_mut();
+        assign.shuffle(&mut *rng);
 
         for (&p, &c) in assign.iter().zip(cards.iter()) {
             if p < n {
@@ -130,22 +163,28 @@ impl GameManager {
         }
     }
 
-    fn run(&mut self) {
+    /// ラウンドを 10 回回す
+    pub fn run(&mut self) {
         for i in 0..10 {
+            // TODO: log 系の crate を使う
+            println!("{}-th round", i);
             self.go_round();
         }
     }
 
-    fn go_round(&mut self) {
-        let n = self.players.len();
+    /// 1ラウンドを回す。
+    /// 各プレイヤーがカードを選び、列への配置、列の回収、スコアの更新を行う。
+    pub fn go_round(&mut self) {
+        // 各プレイヤーはカードを選ぶ
         // Vec<(player id, Card)>
         let mut moves: Vec<(usize, Card)> = self.players.iter()
             .map(|player| player.think(&self.players, &self.field))
             .enumerate()
             .collect();
+        // プレイヤーは選んだカードの数が小さい順に行動する
         moves.sort_by_key(|&(_, card)| card);
         for &(player, card) in moves.iter() {
-            self.players[player].use_card(card, &mut self.field);
+            self.players[player].consume_card(card, &mut self.field);
         }
     }
 }
