@@ -58,6 +58,12 @@ impl Field {
     pub fn is_full(&self, row: usize) -> bool {
         self.rows[row].len() == 6
     }
+
+    pub fn print(&self) {
+        for row in self.rows.iter() {
+            println!("{:?}", row);
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -76,6 +82,10 @@ impl Player {
         }
     }
 
+    pub fn print(&self) {
+        println!("score: {:2}, cards: {:?}", self.score, self.cards);
+    }
+
     // 思考して使うカードを選択する
     fn think(&self, _others: &Vec<Player>, _field: &Field) -> Card {
         use rand::seq::SliceRandom;
@@ -87,19 +97,22 @@ impl Player {
     fn consume_card(&mut self, card: Card, field: &mut Field) {
         let mut rng = self.rng.borrow_mut();
         let row = field.max_lower(card);
-        if let Some(row) = row {
+        let row = if let Some(row) = row {
             // 置くべき列に置く
             field.place(row, card);
             if field.is_full(row) {
                 self.score += field.gather(row);
             }
+            row
         } else {
             // 置ける列がなかったので回収する列を選ぶ
             let row = rng.gen_range(0, 3);
             self.score += field.gather(row); // TODO
-            field.place(row, card);
-        }
-        // 手札から削除する
+            row
+        };
+        // カードを置いて手札から削除する
+        field.place(row, card);
+        assert_eq!(field.rows[row].last(), Some(&card));
         let pos = self
             .cards
             .iter()
@@ -139,16 +152,13 @@ impl GameManager {
                 Vec::with_capacity(6),
             ],
         };
-        self.players = {
-            // let mut rng = self.rng.borrow_mut();
-            // let mut rand = StdRng::from_seed(unimplemented!());
-            // (0..player_number).map(|_| {
-            //     let mut seed = seed.clone();
-            //     let r: u8 = rand.gen();
-            //     seed[0] ^= r;
-            //     Player::new(seed)
-            // }).collect()
-            unimplemented!()
+
+        self.players.clear();
+        self.players.reserve(player_number);
+        for i in 0..player_number {
+            let mut seed = [0; 32];
+            seed[0] = i as u8;
+            self.players.push(Player::new(seed));
         };
 
         // フィールドとプレイヤーにカードを配る
@@ -188,10 +198,12 @@ impl GameManager {
 
     /// ラウンドを 10 回回す。
     pub fn run(&mut self) {
+        self.print();
         for i in 0..10 {
             // TODO: log 系の crate を使う
             println!("{}-th round", i);
             self.go_round();
+            self.print();
         }
     }
 
@@ -211,5 +223,12 @@ impl GameManager {
         for &(player, card) in moves.iter() {
             self.players[player].consume_card(card, &mut self.field);
         }
+    }
+
+    pub fn print(&self) {
+        for player in self.players.iter() {
+            player.print();
+        }
+        self.field.print();
     }
 }
