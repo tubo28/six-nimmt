@@ -60,22 +60,24 @@ impl Field {
     }
 
     pub fn print(&self) {
-        for row in self.rows.iter() {
-            println!("{:?}", row);
+        for (i, row) in self.rows.iter().enumerate() {
+            println!("row {} : {:?}", i, row);
         }
     }
 }
 
 #[derive(Clone)]
 pub struct Player {
+    name: String,
     score: Score,
     cards: Vec<Card>,
     rng: RefCell<StdRng>,
 }
 
 impl Player {
-    fn new(seed: [u8; 32]) -> Player {
+    fn new(name: String, seed: [u8; 32]) -> Player {
         Player {
+            name: name,
             score: 0,
             cards: Vec::new(),
             rng: RefCell::new(StdRng::from_seed(seed)),
@@ -83,43 +85,17 @@ impl Player {
     }
 
     pub fn print(&self) {
-        println!("score: {:2}, cards: {:?}", self.score, self.cards);
+        println!("name: {:10}, score: {:2}, cards: {:?}", self.name, self.score, self.cards);
     }
 
-    // 思考して使うカードを選択する
+    /// 思考して使うカードを選択する
+    /// 乱数じゃなくてちゃんと書く
     fn think(&self, _others: &Vec<Player>, _field: &Field) -> Card {
         use rand::seq::SliceRandom;
-        let mut rng = self.rng.borrow_mut();
-        self.cards[..].choose(&mut *rng).cloned().expect("no card")
-    }
-
-    // FIXME: プレイヤーとフィールドのどちらを主体と見るか微妙なのでグローバル関数のほうがいいかも
-    fn consume_card(&mut self, card: Card, field: &mut Field) {
-        let mut rng = self.rng.borrow_mut();
-        let row = field.max_lower(card);
-        let row = if let Some(row) = row {
-            // 置くべき列に置く
-            field.place(row, card);
-            if field.is_full(row) {
-                self.score += field.gather(row);
-            }
-            row
-        } else {
-            // 置ける列がなかったので回収する列を選ぶ
-            let row = rng.gen_range(0, 3);
-            self.score += field.gather(row); // TODO
-            row
-        };
-        // カードを置いて手札から削除する
-        field.place(row, card);
-        assert_eq!(field.rows[row].last(), Some(&card));
-        let pos = self
-            .cards
-            .iter()
-            .position(|&c| c == card)
-            .expect("no such card");
-        let removed = self.cards.remove(pos);
-        debug_assert_eq!(removed, card);
+        let mut rng = self.rng.borrow_mut(); // TODO
+        let selected = self.cards[..].choose(&mut *rng).cloned().expect("no card");
+        println!("{} uses {}", self.name, selected);
+        selected
     }
 }
 
@@ -140,7 +116,8 @@ impl GameManager {
     }
 
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, player_number: usize, cards: &Vec<Card>) {
+    pub fn initialize(&mut self, names: &[String], cards: &Vec<Card>) {
+        let player_number = names.len();
         assert!(player_number * 10 + 4 <= cards.len());
 
         // メンバの初期化
@@ -155,10 +132,11 @@ impl GameManager {
 
         self.players.clear();
         self.players.reserve(player_number);
-        for i in 0..player_number {
+
+        for (i, name) in names.iter().enumerate() {
             let mut seed = [0; 32];
             seed[0] = i as u8;
-            self.players.push(Player::new(seed));
+            self.players.push(Player::new(name.clone(), seed));
         };
 
         // フィールドとプレイヤーにカードを配る
@@ -204,6 +182,7 @@ impl GameManager {
             println!("{}-th round", i);
             self.go_round();
             self.print();
+            println!("===========================");
         }
     }
 
@@ -221,14 +200,44 @@ impl GameManager {
         // プレイヤーは選んだカードの数が小さい順に行動する
         moves.sort_by_key(|&(_, card)| card);
         for &(player, card) in moves.iter() {
-            self.players[player].consume_card(card, &mut self.field);
+            self.consume_card(player, card);
         }
     }
 
+    fn consume_card(&mut self, player_index: usize, card: Card) {
+        let mut rng = self.rng.borrow_mut();
+        let row = self.field.max_lower(card);
+        let row = if let Some(row) = row {
+            // 置くべき列に置く
+            self.field.place(row, card);
+            if self.field.is_full(row) {
+                self.players[player_index].score += self.field.gather(row);
+            }
+            row
+        } else {
+            // 置ける列がなかったので回収する列を選ぶ
+            let row = rng.gen_range(0, 3);
+            self.players[player_index].score += self.field.gather(row); // TODO
+            row
+        };
+        // カードを置いて手札から削除する
+        self.field.place(row, card);
+        assert_eq!(self.field.rows[row].last(), Some(&card));
+        let pos = self
+            .players[player_index].cards
+            .iter()
+            .position(|&c| c == card)
+            .expect("no such card");
+        let removed = self.players[player_index].cards.remove(pos);
+        debug_assert_eq!(removed, card);
+    }
+
     pub fn print(&self) {
+        println!("Players:");
         for player in self.players.iter() {
             player.print();
         }
+        println!("Field:");
         self.field.print();
     }
 }
