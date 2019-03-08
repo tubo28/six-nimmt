@@ -52,11 +52,11 @@ impl Field {
                 let back = self.rows[i].last().expect("empty row!");
                 *back < card
             })
-            .min_by_key(|&i| self.rows[i].last().expect("empty row!"))
+            .max_by_key(|&i| self.rows[i].last().expect("empty row!"))
     }
 
-    pub fn is_full(&self, row: usize) -> bool {
-        self.rows[row].len() == 6
+    pub fn five(&self, row: usize) -> bool {
+        self.rows[row].len() == 5
     }
 
     pub fn print(&self) {
@@ -201,16 +201,18 @@ impl GameManager {
         moves.sort_by_key(|&(_, card)| card);
         for &(player, card) in moves.iter() {
             self.consume_card(player, card);
+            self.field.print();
         }
     }
 
     fn consume_card(&mut self, player_index: usize, card: Card) {
+        println!("player {} uses {}", player_index, card);
         let mut rng = self.rng.borrow_mut();
         let row = self.field.max_lower(card);
         let row = if let Some(row) = row {
             // 置くべき列に置く
-            self.field.place(row, card);
-            if self.field.is_full(row) {
+            if self.field.five(row) {
+                // 置くと6枚になるので5枚回収する
                 self.players[player_index].score += self.field.gather(row);
             }
             row
