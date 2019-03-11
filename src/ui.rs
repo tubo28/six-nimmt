@@ -47,16 +47,18 @@ impl Field {
 
     /// 末尾のカードが card の数以下の最大の行を返す。
     pub fn max_lower(&self, card: Card) -> Option<usize> {
-        (0..4)
-            .filter(|&i| {
-                let back = self.rows[i].last().expect("empty row!");
-                *back < card
-            })
-            .max_by_key(|&i| self.rows[i].last().expect("empty row!"))
+        self.rows.iter().enumerate().map(|(index, row)| (index, row.last().expect("empty row!")))
+            .filter(|(_, &back)| back < card)
+            .max_by_key(|(_, &back)| back)
+            .map(|(index, _)| index)
     }
 
     pub fn five(&self, row: usize) -> bool {
         self.rows[row].len() == 5
+    }
+
+    pub fn nimmt(&self, row: usize) -> bool {
+        self.rows[row].len() == 6
     }
 
     pub fn print(&self) {
@@ -68,56 +70,76 @@ impl Field {
 
 #[derive(Clone)]
 pub struct Player {
-    name: String,
     score: Score,
     cards: Vec<Card>,
-    rng: RefCell<StdRng>,
 }
 
 impl Player {
-    fn new(name: String, seed: [u8; 32]) -> Player {
+    fn new() -> Player {
         Player {
-            name: name,
             score: 0,
             cards: Vec::new(),
-            rng: RefCell::new(StdRng::from_seed(seed)),
         }
     }
 
     pub fn print(&self) {
-        println!("name: {:10}, score: {:2}, cards: {:?}", self.name, self.score, self.cards);
+        println!("score: {:2}, cards: {:?}", self.score, self.cards);
+    }
+}
+
+#[derive(Clone)]
+pub struct RandomAI {
+    name: String,
+    used: [bool; 105], // TODO: 内部的に 0..103 にする？
+    rng: RefCell<StdRng>,
+}
+
+impl RandomAI {
+    pub fn new(name: String, seed: u8) -> RandomAI {
+        let seed = [seed; 32];
+        RandomAI {
+            name: name,
+            used: [false; 105],
+            rng: RefCell::new(StdRng::from_seed(seed)),
+        }
     }
 
     /// 思考して使うカードを選択する
-    /// 乱数じゃなくてちゃんと書く
-    fn think(&self, _others: &Vec<Player>, _field: &Field) -> Card {
+    /// TODO: 乱数じゃなくてちゃんと書く
+    pub fn choose_card(&mut self, _turn: usize, _field: &Field, cards: &Vec<Card>) -> Card {
         use rand::seq::SliceRandom;
         let mut rng = self.rng.borrow_mut(); // TODO
-        let selected = self.cards[..].choose(&mut *rng).cloned().expect("no card");
-        println!("{} uses {}", self.name, selected);
+        let selected = cards[..].choose(&mut *rng).cloned().expect("no card");
         selected
+    }
+
+    /// 置けないときに回収する列を選ぶ
+    /// TODO: ランダムじゃなくてまじめにやる
+    pub fn choose_gather_row(&mut self, _turn: usize, _choosed_cards: &Vec<Card>, _field: &Field) -> usize {
+        let mut rng = self.rng.borrow_mut();
+        rng.gen_range(0, 3)
     }
 }
 
 pub struct GameManager {
     field: Field,
     players: Vec<Player>,
-    rng: RefCell<StdRng>,
+    ais: Vec<RandomAI>,
 }
 
 // TODO: 4, 6, 10 などのマジックナンバーを const にする
 impl GameManager {
-    pub fn new(seed: [u8; 32]) -> GameManager {
+    pub fn new() -> GameManager {
         GameManager {
             field: Field::new(),
             players: Vec::new(),
-            rng: RefCell::new(StdRng::from_seed(seed)),
+            ais: Vec::new(),
         }
     }
 
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, names: &[String], cards: &Vec<Card>) {
-        let player_number = names.len();
+    pub fn initialize(&mut self, seed: u8, players: &[RandomAI], cards: &Vec<Card>) {
+        let player_number = players.len();
         assert!(player_number * 10 + 4 <= cards.len());
 
         // メンバの初期化
@@ -130,14 +152,9 @@ impl GameManager {
             ],
         };
 
-        self.players.clear();
-        self.players.reserve(player_number);
+        self.players = vec![Player::new(); player_number];
 
-        for (i, name) in names.iter().enumerate() {
-            let mut seed = [0; 32];
-            seed[0] = i as u8;
-            self.players.push(Player::new(name.clone(), seed));
-        };
+        self.ais = players.iter().cloned().collect();
 
         // フィールドとプレイヤーにカードを配る
         let n = player_number;
@@ -157,8 +174,8 @@ impl GameManager {
         }
         debug_assert_eq!(cards.len(), assign.len());
 
-        let mut rng = self.rng.borrow_mut();
-        assign.shuffle(&mut *rng);
+        let mut rng = StdRng::from_seed([seed; 32]);
+        assign.shuffle(&mut rng);
 
         for (&p, &c) in assign.iter().zip(cards.iter()) {
             if p < n {
@@ -191,24 +208,25 @@ impl GameManager {
     pub fn go_round(&mut self) {
         // 各プレイヤーはカードを選ぶ
         // Vec<(player id, Card)>
-        let mut moves: Vec<(usize, Card)> = self
-            .players
-            .iter()
-            .map(|player| player.think(&self.players, &self.field))
-            .enumerate()
-            .collect();
+        let mut moves = Vec::new();
+        let mut chosed_cards = Vec::new();
+        for (id, (player, ai)) in self.players.iter().zip(self.ais.iter_mut()).enumerate() {
+            let card = ai.choose_card(0, &self.field, &player.cards);
+            moves.push((id, card));
+            chosed_cards.push(card);
+        }
         // プレイヤーは選んだカードの数が小さい順に行動する
         moves.sort_by_key(|&(_, card)| card);
+        println!("{:?}", moves);
         for &(player, card) in moves.iter() {
-            self.consume_card(player, card);
+            self.consume_card(player, card, &chosed_cards);
             self.field.print();
         }
     }
 
-    fn consume_card(&mut self, player_index: usize, card: Card) {
-        println!("player {} uses {}", player_index, card);
-        let mut rng = self.rng.borrow_mut();
+    fn consume_card(&mut self, player_index: usize, card: Card, choosed_cards: &Vec<Card>) {
         let row = self.field.max_lower(card);
+        println!("player {} uses {} -> row {:?}", player_index, card, row);
         let row = if let Some(row) = row {
             // 置くべき列に置く
             if self.field.five(row) {
@@ -218,8 +236,8 @@ impl GameManager {
             row
         } else {
             // 置ける列がなかったので回収する列を選ぶ
-            let row = rng.gen_range(0, 3);
-            self.players[player_index].score += self.field.gather(row); // TODO
+            let row = self.ais[player_index].choose_gather_row(0, choosed_cards, &self.field);
+            self.players[player_index].score += self.field.gather(row);
             row
         };
         // カードを置いて手札から削除する

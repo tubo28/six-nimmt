@@ -2,11 +2,17 @@ mod ui;
 
 fn main() {
     println!("Hello, world!");
-    let mut seed = [0u8; 32];
-    seed[0] = 28;
-    let mut gm = ui::GameManager::new(seed);
-    let players: Vec<String> = vec!["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"].iter().map(|s| s.to_string()).collect();
+    let seed = 32;
+    let mut gm = ui::GameManager::new();
+    let players = vec![
+        ui::RandomAI::new("Alpha".to_string(), seed),
+        ui::RandomAI::new("Bravo".to_string(), seed),
+        ui::RandomAI::new("Charlie".to_string(), seed),
+        ui::RandomAI::new("Delta".to_string(), seed),
+        ui::RandomAI::new("Echo".to_string(), seed),
+        ui::RandomAI::new("Foxtrot".to_string(), seed),
+    ];
     let cards = (1..=104).collect();
-    gm.initialize(&players[..], &cards);
+    gm.initialize(seed, &players[..], &cards);
     gm.run();
 }
