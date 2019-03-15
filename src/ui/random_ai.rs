@@ -1,6 +1,6 @@
 use super::ai::AI;
-use super::game::*;
 use super::field::*;
+use super::game::*;
 use rand::prelude::*;
 use std::cell::RefCell;
 
@@ -38,7 +38,12 @@ impl AI for RandomAI {
 
     /// 置けないときに回収する列を選ぶ
     /// TODO: ランダムじゃなくてまじめにやる
-    fn choose_gather_row(&mut self, _turn: usize, _choosed_cards: &Vec<Card>, _field: &Field) -> usize {
+    fn choose_gather_row(
+        &mut self,
+        _turn: usize,
+        _choosed_cards: &Vec<Card>,
+        _field: &Field,
+    ) -> usize {
         let mut rng = self.rng.borrow_mut();
         rng.gen_range(0, 3)
     }

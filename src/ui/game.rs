@@ -1,7 +1,7 @@
-use rand::prelude::*;
 use super::field::*;
 use super::player::*;
 use crate::ui::ai::AI;
+use rand::prelude::*;
 
 // TODO: 構造体でくるむ？
 pub type Card = u8;
@@ -140,8 +140,8 @@ impl GameManager {
         // カードを置いて手札から削除する
         self.field.place(row, card);
         assert_eq!(self.field.rows[row].last(), Some(&card));
-        let pos = self
-            .players[player_index].cards
+        let pos = self.players[player_index]
+            .cards
             .iter()
             .position(|&c| c == card)
             .expect("no such card");

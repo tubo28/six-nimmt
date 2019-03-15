@@ -10,9 +10,7 @@ pub struct CLIPlayer {
 impl CLIPlayer {
     pub fn new(name: String, _seed: u8) -> CLIPlayer {
         println!("random seed is not use");
-        CLIPlayer {
-            name: name,
-        }
+        CLIPlayer { name: name }
     }
 }
 
@@ -25,8 +23,12 @@ impl AI for CLIPlayer {
         unimplemented!();
     }
 
-    fn choose_gather_row(&mut self, _turn: usize, _choosed_cards: &Vec<Card>, _field: &Field) -> usize {
+    fn choose_gather_row(
+        &mut self,
+        _turn: usize,
+        _choosed_cards: &Vec<Card>,
+        _field: &Field,
+    ) -> usize {
         unimplemented!();
     }
-
 }

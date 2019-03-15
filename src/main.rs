@@ -1,6 +1,6 @@
+use six_nimmt::ui::cli_player::CLIPlayer;
 use six_nimmt::ui::game::GameManager;
 use six_nimmt::ui::random_ai::RandomAI;
-use six_nimmt::ui::cli_player::CLIPlayer;
 
 use six_nimmt::ui::ai::AI;
 

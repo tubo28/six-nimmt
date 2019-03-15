@@ -31,7 +31,10 @@ impl Field {
 
     /// 末尾のカードが card の数以下の最大の行を返す。
     pub fn max_lower(&self, card: Card) -> Option<usize> {
-        self.rows.iter().enumerate().map(|(index, row)| (index, row.last().expect("empty row!")))
+        self.rows
+            .iter()
+            .enumerate()
+            .map(|(index, row)| (index, row.last().expect("empty row!")))
             .filter(|(_, &back)| back < card)
             .max_by_key(|(_, &back)| back)
             .map(|(index, _)| index)
