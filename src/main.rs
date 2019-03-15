@@ -1,11 +1,15 @@
-use six_nimmt::ui::game;
-use six_nimmt::ui::random_ai;
+use six_nimmt::ui::game::GameManager;
+use six_nimmt::ui::random_ai::RandomAI;
+use six_nimmt::ui::cli_player::CLIPlayer;
+
+use six_nimmt::ui::ai::AI;
 
 fn main() {
-    use game::GameManager;
-    use random_ai::RandomAI;
-
     println!("Hello, world!");
+
+    CLIPlayer::new("aoaa".to_string(), 0);
+
+    
     let seed = 32;
     let mut gm = GameManager::new();
     let players = vec![

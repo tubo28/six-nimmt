@@ -1,3 +1,4 @@
+use super::ai::AI;
 use super::game::*;
 use super::field::*;
 use rand::prelude::*;
@@ -10,8 +11,8 @@ pub struct RandomAI {
     rng: RefCell<StdRng>,
 }
 
-impl RandomAI {
-    pub fn new(name: String, seed: u8) -> RandomAI {
+impl AI for RandomAI {
+    fn new(name: String, seed: u8) -> RandomAI {
         let seed = [seed; 32];
         RandomAI {
             name: name,
@@ -20,9 +21,13 @@ impl RandomAI {
         }
     }
 
+    fn name(&self) -> String {
+        self.name.clone()
+    }
+
     /// 思考して使うカードを選択する
     /// TODO: 乱数じゃなくてちゃんと書く
-    pub fn choose_card(&mut self, _turn: usize, _field: &Field, cards: &Vec<Card>) -> Card {
+    fn choose_card(&mut self, _turn: usize, _field: &Field, cards: &Vec<Card>) -> Card {
         use rand::seq::SliceRandom;
         let mut rng = self.rng.borrow_mut(); // TODO
         let selected = cards[..].choose(&mut *rng).cloned().expect("no card");
@@ -31,7 +36,7 @@ impl RandomAI {
 
     /// 置けないときに回収する列を選ぶ
     /// TODO: ランダムじゃなくてまじめにやる
-    pub fn choose_gather_row(&mut self, _turn: usize, _choosed_cards: &Vec<Card>, _field: &Field) -> usize {
+    fn choose_gather_row(&mut self, _turn: usize, _choosed_cards: &Vec<Card>, _field: &Field) -> usize {
         let mut rng = self.rng.borrow_mut();
         rng.gen_range(0, 3)
     }

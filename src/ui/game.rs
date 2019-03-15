@@ -2,6 +2,7 @@ use rand::prelude::*;
 use super::field::*;
 use super::player::*;
 use super::random_ai::*;
+use crate::ui::ai::AI;
 
 // TODO: 構造体でくるむ？
 pub type Card = u8;
