@@ -22,13 +22,10 @@ impl AI for CLIPlayer {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, turn: usize, field: &Field, cards: &Vec<Card>) -> Card {
-        println!("第{}ターン", turn);
+    fn choose_card(&mut self, _turn: usize, field: &Field, cards: &Vec<Card>) -> Card {
         field.print();
         println!("あなたのカード: {:?}", cards);
-        print!("出すカードを入力してください: ");
-        stdout().flush().unwrap();
-        read_valid_card_loop(cards)
+        read_valid_or_retry(cards, "出すカードを入力してください")
     }
 
     fn choose_gather_row(
@@ -43,11 +40,7 @@ impl AI for CLIPlayer {
             "他のプレイヤーが出したカード: {:?}",
             choosed_cards
         );
-        print!(
-            "カードを出せる列がありません。回収する列を選んでください: "
-        );
-        stdout().flush().unwrap();
-        read_valid_card_loop(&[0, 1, 2, 3])
+        read_valid_or_retry(&[0, 1, 2, 3], "カードを出せる列がありません。回収する列を選んでください")
     }
 }
 
@@ -66,15 +59,15 @@ fn read<T: FromStr>() -> Option<T> {
     line.parse::<T>().ok()
 }
 
-/// 標準入力から整数を 1 行読み込めるまで読み続ける
-fn read_loop<T: FromStr>() -> T {
-    read().unwrap_or_else(|| read_loop())
-}
-
 /// valids に含まれる値が読み込まれるまで読み続ける
-fn read_valid_card_loop<T: FromStr + Eq>(valids: &[T]) -> T {
-    let card = read_loop();
-    let pos = valids.iter().position(|x| x == &card);
-    pos.map(|_| card)
-        .unwrap_or_else(|| read_valid_card_loop(valids))
+fn read_valid_or_retry<T: FromStr + Eq>(valids: &[T], message: &str) -> T {
+    loop {
+        print!("{}: ", message);
+        stdout().flush().unwrap();
+        if let Some(val) = read() {
+            if let Some(_) = valids.iter().position(|x| x == &val) {
+                return val
+            }
+        }
+    }
 }
