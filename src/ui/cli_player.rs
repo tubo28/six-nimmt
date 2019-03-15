@@ -40,7 +40,10 @@ impl AI for CLIPlayer {
             "他のプレイヤーが出したカード: {:?}",
             choosed_cards
         );
-        read_valid_or_retry(&[0, 1, 2, 3], "カードを出せる列がありません。回収する列を選んでください")
+        read_valid_or_retry(
+            &[0, 1, 2, 3],
+            "カードを出せる列がありません。回収する列を選んでください",
+        )
     }
 }
 
@@ -66,7 +69,7 @@ fn read_valid_or_retry<T: FromStr + Eq>(valids: &[T], message: &str) -> T {
         stdout().flush().unwrap();
         if let Some(val) = read() {
             if let Some(_) = valids.iter().position(|x| x == &val) {
-                return val
+                return val;
             }
         }
     }

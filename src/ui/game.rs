@@ -110,7 +110,10 @@ impl GameManager {
         for (id, (player, ai)) in self.players.iter().zip(self.ais.iter_mut()).enumerate() {
             let card = ai.choose_card(0, &self.field, &player.cards);
             // TODO: ログ出力をchoose_cardの実装に移す
-            println!("プレイヤー{}がカード{}を選びました", id, card);
+            println!(
+                "プレイヤー{}がカード{}を選びました",
+                id, card
+            );
             moves.push((id, card));
             chosed_cards.push(card);
         }
@@ -123,7 +126,10 @@ impl GameManager {
     }
 
     fn consume_card(&mut self, player_index: usize, card: Card, choosed_cards: &Vec<Card>) {
-        println!("プレイヤー{}がカード{}を使います", player_index, card);
+        println!(
+            "プレイヤー{}がカード{}を使います",
+            player_index, card
+        );
         let row = self.field.max_lower(card);
         let row = if let Some(row) = row {
             // 置くべき列に置く
