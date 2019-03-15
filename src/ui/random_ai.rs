@@ -27,8 +27,6 @@ impl AI for RandomAI {
         self.name.clone()
     }
 
-    /// 思考して使うカードを選択する
-    /// TODO: 乱数じゃなくてちゃんと書く
     fn choose_card(&mut self, _turn: usize, _field: &Field, cards: &Vec<Card>) -> Card {
         use rand::seq::SliceRandom;
         let mut rng = self.rng.borrow_mut(); // TODO
@@ -36,8 +34,6 @@ impl AI for RandomAI {
         selected
     }
 
-    /// 置けないときに回収する列を選ぶ
-    /// TODO: ランダムじゃなくてまじめにやる
     fn choose_gather_row(
         &mut self,
         _turn: usize,

@@ -91,12 +91,12 @@ impl GameManager {
     /// ラウンドを 10 回回す。
     pub fn run(&mut self) {
         self.print();
-        for i in 0..10 {
+        for i in 1..=10 {
             // TODO: log 系の crate を使う
-            println!("{}-th round", i);
+            println!("第{}ターン", i);
             self.go_round();
             self.print();
-            println!("===========================");
+            println!("======================================================");
         }
     }
 
@@ -109,12 +109,13 @@ impl GameManager {
         let mut chosed_cards = Vec::new();
         for (id, (player, ai)) in self.players.iter().zip(self.ais.iter_mut()).enumerate() {
             let card = ai.choose_card(0, &self.field, &player.cards);
+            // TODO: ログ出力をchoose_cardの実装に移す
+            println!("プレイヤー{}がカード{}を選びました", id, card);
             moves.push((id, card));
             chosed_cards.push(card);
         }
         // プレイヤーは選んだカードの数が小さい順に行動する
         moves.sort_by_key(|&(_, card)| card);
-        println!("{:?}", moves);
         for &(player, card) in moves.iter() {
             self.consume_card(player, card, &chosed_cards);
             self.field.print();
@@ -122,8 +123,8 @@ impl GameManager {
     }
 
     fn consume_card(&mut self, player_index: usize, card: Card, choosed_cards: &Vec<Card>) {
+        println!("プレイヤー{}がカード{}を使います", player_index, card);
         let row = self.field.max_lower(card);
-        println!("player {} uses {} -> row {:?}", player_index, card, row);
         let row = if let Some(row) = row {
             // 置くべき列に置く
             if self.field.five(row) {
@@ -150,11 +151,11 @@ impl GameManager {
     }
 
     pub fn print(&self) {
-        println!("Players:");
+        println!("プレイヤー:");
         for player in self.players.iter() {
             player.print();
         }
-        println!("Field:");
+        println!("フィールド:");
         self.field.print();
     }
 }

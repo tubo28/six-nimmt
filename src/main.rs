@@ -5,14 +5,10 @@ use six_nimmt::ui::random_ai::RandomAI;
 use six_nimmt::ui::ai::AI;
 
 fn main() {
-    println!("Hello, world!");
-
-    CLIPlayer::new("aoaa".to_string(), 0);
-
     let seed = 32;
     let mut gm = GameManager::new();
     let players: Vec<Box<AI>> = vec![
-        Box::new(RandomAI::new("Alpha".to_string(), seed)),
+        Box::new(CLIPlayer::new("Alpha".to_string())),
         Box::new(RandomAI::new("Bravo".to_string(), seed)),
         Box::new(RandomAI::new("Charlie".to_string(), seed)),
         Box::new(RandomAI::new("Delta".to_string(), seed)),
