@@ -7,14 +7,16 @@ pub struct CLIPlayer {
     name: String,
 }
 
-impl AI for CLIPlayer {
-    fn new(name: String, _seed: u8) -> CLIPlayer {
+impl CLIPlayer {
+    pub fn new(name: String, _seed: u8) -> CLIPlayer {
         println!("random seed is not use");
         CLIPlayer {
             name: name,
         }
     }
+}
 
+impl AI for CLIPlayer {
     fn name(&self) -> String {
         self.name.clone()
     }

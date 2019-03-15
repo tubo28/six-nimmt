@@ -1,7 +1,6 @@
 use rand::prelude::*;
 use super::field::*;
 use super::player::*;
-use super::random_ai::*;
 use crate::ui::ai::AI;
 
 // TODO: 構造体でくるむ？
@@ -22,7 +21,7 @@ pub fn score(card: Card) -> Score {
 pub struct GameManager {
     field: Field,
     players: Vec<Player>,
-    ais: Vec<RandomAI>,
+    ais: Vec<Box<AI>>,
 }
 
 // TODO: 4, 6, 10 などのマジックナンバーを const にする
@@ -36,7 +35,7 @@ impl GameManager {
     }
 
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, seed: u8, players: &[RandomAI], cards: &Vec<Card>) {
+    pub fn initialize(&mut self, seed: u8, players: Vec<Box<AI>>, cards: Vec<Card>) {
         let player_number = players.len();
         assert!(player_number * 10 + 4 <= cards.len());
 
@@ -52,7 +51,7 @@ impl GameManager {
 
         self.players = vec![Player::new(); player_number];
 
-        self.ais = players.iter().cloned().collect();
+        self.ais = players;
 
         // フィールドとプレイヤーにカードを配る
         let n = player_number;

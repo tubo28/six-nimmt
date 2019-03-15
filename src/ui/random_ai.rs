@@ -11,8 +11,8 @@ pub struct RandomAI {
     rng: RefCell<StdRng>,
 }
 
-impl AI for RandomAI {
-    fn new(name: String, seed: u8) -> RandomAI {
+impl RandomAI {
+    pub fn new(name: String, seed: u8) -> RandomAI {
         let seed = [seed; 32];
         RandomAI {
             name: name,
@@ -20,7 +20,9 @@ impl AI for RandomAI {
             rng: RefCell::new(StdRng::from_seed(seed)),
         }
     }
+}
 
+impl AI for RandomAI {
     fn name(&self) -> String {
         self.name.clone()
     }
