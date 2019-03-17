@@ -1,9 +1,9 @@
 use crate::ai::ai::AI;
 use crate::ui::field::*;
 use crate::ui::game::*;
+use crate::util::u64_to_seed_arr;
 use rand::prelude::*;
 use std::cell::RefCell;
-use crate::util::u64_to_seed_arr;
 
 #[derive(Clone)]
 pub struct RandomAI {
