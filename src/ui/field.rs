@@ -1,4 +1,4 @@
-use super::game::*;
+use crate::ui::game::*;
 
 pub struct Field {
     pub rows: [Vec<Card>; 4],

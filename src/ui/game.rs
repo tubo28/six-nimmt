@@ -1,6 +1,6 @@
-use super::field::*;
-use super::player::*;
-use crate::ui::ai::AI;
+use crate::ui::field::*;
+use crate::ui::player::*;
+use crate::ai::ai::AI;
 use rand::prelude::*;
 
 // TODO: 構造体でくるむ？

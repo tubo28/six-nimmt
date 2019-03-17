@@ -1,8 +1,7 @@
-use six_nimmt::ui::cli_player::CLIPlayer;
+use six_nimmt::ai::ai::AI;
+use six_nimmt::ai::cli_player::CLIPlayer;
+use six_nimmt::ai::random_ai::RandomAI;
 use six_nimmt::ui::game::GameManager;
-use six_nimmt::ui::random_ai::RandomAI;
-
-use six_nimmt::ui::ai::AI;
 
 fn main() {
     let seed = 32;

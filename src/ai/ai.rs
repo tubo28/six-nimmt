@@ -1,5 +1,5 @@
-use super::field::Field;
-use super::game::Card;
+use crate::ui::field::Field;
+use crate::ui::game::Card;
 
 pub trait AI {
     /// プレイヤー名を取得する

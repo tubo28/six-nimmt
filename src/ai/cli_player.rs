@@ -1,6 +1,6 @@
-use super::ai::AI;
-use super::field::Field;
-use super::game::Card;
+use crate::ai::ai::AI;
+use crate::ui::field::Field;
+use crate::ui::game::Card;
 use std::cmp::Eq;
 use std::io::Write;
 use std::io::{stdin, stdout};

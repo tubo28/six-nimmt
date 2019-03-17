@@ -1,6 +1,6 @@
-use super::ai::AI;
-use super::field::*;
-use super::game::*;
+use crate::ai::ai::AI;
+use crate::ui::field::*;
+use crate::ui::game::*;
 use rand::prelude::*;
 use std::cell::RefCell;
 

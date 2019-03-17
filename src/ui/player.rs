@@ -1,4 +1,4 @@
-use super::game::*;
+use crate::ui::game::*;
 
 #[derive(Clone)]
 pub struct Player {
