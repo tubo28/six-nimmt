@@ -3,6 +3,7 @@ use crate::ui::field::*;
 use crate::ui::game::*;
 use rand::prelude::*;
 use std::cell::RefCell;
+use crate::util::u64_to_seed_arr;
 
 #[derive(Clone)]
 pub struct RandomAI {
@@ -12,12 +13,13 @@ pub struct RandomAI {
 }
 
 impl RandomAI {
-    pub fn new(name: String, seed: u8) -> RandomAI {
-        let seed = [seed; 32];
+    pub fn new(name: String, seed: u64) -> RandomAI {
+        let mut seed_arr = [0u8; 32];
+        u64_to_seed_arr(seed, &mut seed_arr);
         RandomAI {
             name: name,
             used: [false; 105],
-            rng: RefCell::new(StdRng::from_seed(seed)),
+            rng: RefCell::new(StdRng::from_seed(seed_arr)),
         }
     }
 }

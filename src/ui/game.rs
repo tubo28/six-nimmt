@@ -1,8 +1,9 @@
 use crate::ui::field::*;
 use crate::ui::player::*;
 use crate::ai::ai::AI;
-use rand::prelude::*;
+use crate::util::u64_to_seed_arr;
 
+use rand::prelude::*;
 // TODO: 構造体でくるむ？
 pub type Card = u8;
 pub type Score = u8;
@@ -35,7 +36,7 @@ impl GameManager {
     }
 
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, seed: u8, players: Vec<Box<AI>>, cards: Vec<Card>) {
+    pub fn initialize(&mut self, seed: u64, players: Vec<Box<AI>>, cards: Vec<Card>) {
         let player_number = players.len();
         assert!(player_number * 10 + 4 <= cards.len());
 
@@ -71,7 +72,9 @@ impl GameManager {
         }
         debug_assert_eq!(cards.len(), assign.len());
 
-        let mut rng = StdRng::from_seed([seed; 32]);
+        let mut seed_arr = [0; 32];
+        u64_to_seed_arr(seed, &mut seed_arr);
+        let mut rng = StdRng::from_seed(seed_arr);
         assign.shuffle(&mut rng);
 
         for (&p, &c) in assign.iter().zip(cards.iter()) {
