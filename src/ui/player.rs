@@ -1,5 +1,5 @@
 use crate::ui::game::*;
-use crate::util::display_card_list;
+use crate::util::display_cards;
 
 #[derive(Clone)]
 pub struct Player {
@@ -19,7 +19,7 @@ impl Player {
         println!(
             "score: {:-3}, cards: {}",
             self.score,
-            display_card_list(&self.cards)
+            display_cards(&self.cards)
         );
     }
 }

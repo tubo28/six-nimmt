@@ -1,5 +1,5 @@
 use crate::ui::game::*;
-use crate::util::display_card_list;
+use crate::util::display_cards;
 
 pub struct Field {
     pub rows: [Vec<Card>; 4],
@@ -51,7 +51,7 @@ impl Field {
 
     pub fn print(&self) {
         for row in self.rows.iter() {
-            println!("{}", display_card_list(row));
+            println!("{}", display_cards(row));
         }
     }
 }

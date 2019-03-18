@@ -1,7 +1,7 @@
 use crate::ai::ai::AI;
 use crate::ui::field::*;
 use crate::ui::game::*;
-use crate::util::u64_to_seed_arr;
+use crate::util::u64_to_array32;
 use rand::prelude::*;
 use std::cell::RefCell;
 
@@ -15,7 +15,7 @@ pub struct RandomAI {
 impl RandomAI {
     pub fn new(name: String, seed: u64) -> RandomAI {
         let mut seed_arr = [0u8; 32];
-        u64_to_seed_arr(seed, &mut seed_arr);
+        u64_to_array32(seed, &mut seed_arr);
         RandomAI {
             name: name,
             used: [false; 105],

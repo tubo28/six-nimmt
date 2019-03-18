@@ -1,7 +1,7 @@
 use crate::ai::ai::AI;
 use crate::ui::field::Field;
 use crate::ui::game::Card;
-use crate::util::display_card_list;
+use crate::util::display_cards;
 use std::cmp::Eq;
 use std::io::Write;
 use std::io::{stdin, stdout};
@@ -25,7 +25,7 @@ impl AI for CLIPlayer {
 
     fn choose_card(&mut self, _turn: usize, field: &Field, cards: &Vec<Card>) -> Card {
         field.print();
-        println!("あなたのカード: {}", display_card_list(cards));
+        println!("あなたのカード: {}", display_cards(cards));
         read_valid_or_retry(cards, "出すカードを入力してください")
     }
 

@@ -1,7 +1,7 @@
 use crate::ai::ai::AI;
 use crate::ui::field::*;
 use crate::ui::player::*;
-use crate::util::u64_to_seed_arr;
+use crate::util::u64_to_array32;
 
 use rand::prelude::*;
 // TODO: 構造体でくるむ？
@@ -97,7 +97,7 @@ impl GameManager {
         debug_assert_eq!(cards.len(), assign.len());
 
         let mut seed_arr = [0; 32];
-        u64_to_seed_arr(seed, &mut seed_arr);
+        u64_to_array32(seed, &mut seed_arr);
         let mut rng = StdRng::from_seed(seed_arr);
         assign.shuffle(&mut rng);
 
