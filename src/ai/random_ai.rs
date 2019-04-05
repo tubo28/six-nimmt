@@ -1,5 +1,4 @@
 use crate::ai::ai::AI;
-use crate::ui::field::*;
 use crate::ui::game::*;
 use crate::util::u64_to_array32;
 use rand::prelude::*;
@@ -29,19 +28,13 @@ impl AI for RandomAI {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, _turn: usize, _field: &Field, cards: &Vec<Card>) -> Card {
-        use rand::seq::SliceRandom;
+    fn choose_card(&mut self, view: &StateView) -> Card {
         let mut rng = self.rng.borrow_mut(); // TODO
-        let selected = cards[..].choose(&mut *rng).cloned().expect("no card");
+        let selected = view.my_cards[..].choose(&mut *rng).cloned().expect("no card");
         selected
     }
 
-    fn choose_gather_row(
-        &mut self,
-        _turn: usize,
-        _choosed_cards: &Vec<Card>,
-        _field: &Field,
-    ) -> usize {
+    fn choose_gather_row(&mut self, _view: &StateView2) -> usize {
         let mut rng = self.rng.borrow_mut();
         rng.gen_range(0, 3)
     }

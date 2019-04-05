@@ -1,6 +1,7 @@
 use crate::ai::ai::AI;
-use crate::ui::field::Field;
 use crate::ui::game::Card;
+use crate::ui::game::StateView;
+use crate::ui::game::StateView2;
 
 #[derive(Clone)]
 pub struct MonteCalroAI {
@@ -18,16 +19,11 @@ impl AI for MonteCalroAI {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, _turn: usize, _field: &Field, _cards: &Vec<Card>) -> Card {
+    fn choose_card(&mut self, _view: &StateView) -> Card {
         unimplemented!()
     }
 
-    fn choose_gather_row(
-        &mut self,
-        _turn: usize,
-        _choosed_cards: &Vec<Card>,
-        _field: &Field,
-    ) -> usize {
+    fn choose_gather_row(&mut self, _view: &StateView2) -> usize {
         unimplemented!()
     }
 }

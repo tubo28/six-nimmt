@@ -1,6 +1,7 @@
 use crate::ui::game::*;
 use crate::util::display_cards;
 
+#[derive(Clone)]
 pub struct Field {
     pub rows: [Vec<Card>; 4],
 }

@@ -1,5 +1,6 @@
 use crate::ai::ai::AI;
-use crate::ui::field::Field;
+use crate::ui::game::StateView;
+use crate::ui::game::StateView2;
 use crate::ui::game::Card;
 use crate::util::display_cards;
 use std::cmp::Eq;
@@ -23,23 +24,18 @@ impl AI for CLIPlayer {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, _turn: usize, field: &Field, cards: &Vec<Card>) -> Card {
-        field.print();
-        println!("あなたのカード: {}", display_cards(cards));
-        read_valid_or_retry(cards, "出すカードを入力してください")
+    fn choose_card(&mut self, view: &StateView) -> Card {
+        view.field.print();
+        println!("あなたのカード: {}", display_cards(&view.my_cards));
+        read_valid_or_retry(&view.my_cards, "出すカードを入力してください")
     }
 
-    fn choose_gather_row(
-        &mut self,
-        turn: usize,
-        choosed_cards: &Vec<Card>,
-        field: &Field,
-    ) -> usize {
-        println!("第{}ターン", turn);
-        field.print();
+    fn choose_gather_row(&mut self, view: &StateView2) -> usize {
+        println!("第{}ターン", view.turn);
+        view.field.print();
         println!(
             "他のプレイヤーが出したカード: {:?}",
-            choosed_cards
+            view.choosed_cards
         );
         read_valid_or_retry(
             &[0, 1, 2, 3],
