@@ -43,10 +43,17 @@ pub fn score(card: Card) -> Score {
     SCORE_TABLE[card as usize]
 }
 
+enum CardState {
+    HandOf(usize),   // player id, 手札にあ
+    Revealed(usize), // player id, 開示され場に置かれている
+    UsedBy(usize),   // player id, 使われた
+    Unknown,
+}
+
 pub struct GameManager {
     pub field: Field,
-    pub used_cards: Vec<Vec<Card>>,
-    pub players: Vec<Player>,
+    pub cards: Vec<CardState>,
+    pub scores: Vec<Score>,
     pub ais: Vec<Box<AI>>,
 }
 
@@ -55,8 +62,8 @@ impl GameManager {
     pub fn new() -> GameManager {
         GameManager {
             field: Field::new(),
-            used_cards: Vec::new(),
-            players: Vec::new(),
+            cards: Vec::new(),
+            scores: Vec::new(),
             ais: Vec::new(),
         }
     }
@@ -75,6 +82,8 @@ impl GameManager {
                 Vec::with_capacity(6),
             ],
         };
+
+        self.used_cards = vec![];
 
         self.players = vec![Player::new(); player_number];
 
@@ -157,6 +166,9 @@ impl GameManager {
             self.consume_card(turn, player, card, &chosed_cards);
             self.field.print();
         }
+
+        for card in chosed_cards.iter() {
+        }
     }
 
     fn consume_card(&mut self, turn: usize, player_index: usize, card: Card, choosed_cards: &Vec<Card>) {
@@ -176,7 +188,7 @@ impl GameManager {
             row
         } else {
             // 置ける列がなかったので回収する列を選ぶ
-            view.my_cards = self.used_cards[player_index].clone();
+            view.my_cards = self.used_cards.iter().filter(|(p, _)| *p == player_index).map(|(p, c)| *c).collect();
             let row = self.ais[player_index].choose_gather_row(&view);
             self.players[player_index].score += self.field.gather(row);
             row
