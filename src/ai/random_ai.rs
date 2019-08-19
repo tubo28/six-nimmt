@@ -28,13 +28,16 @@ impl AI for RandomAI {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, view: &StateView) -> Card {
+    fn choose_card(&mut self, view: &ViewOnChoosingCard) -> Card {
         let mut rng = self.rng.borrow_mut(); // TODO
-        let selected = view.my_cards[..].choose(&mut *rng).cloned().expect("no card");
+        let selected = view.my_cards[..]
+            .choose(&mut *rng)
+            .cloned()
+            .expect("no card");
         selected
     }
 
-    fn choose_gather_row(&mut self, _view: &StateView2) -> usize {
+    fn choose_gather_row(&mut self, _view: &ViewOnGatheringRow) -> usize {
         let mut rng = self.rng.borrow_mut();
         rng.gen_range(0, 3)
     }

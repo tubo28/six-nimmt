@@ -1,7 +1,7 @@
 use crate::ai::ai::AI;
 use crate::ui::game::Card;
-use crate::ui::game::StateView;
-use crate::ui::game::StateView2;
+use crate::ui::game::ViewOnChoosingCard;
+use crate::ui::game::ViewOnGatheringRow;
 
 #[derive(Clone)]
 pub struct MonteCalroAI {
@@ -19,11 +19,11 @@ impl AI for MonteCalroAI {
         self.name.clone()
     }
 
-    fn choose_card(&mut self, _view: &StateView) -> Card {
+    fn choose_card(&mut self, _view: &ViewOnChoosingCard) -> Card {
         unimplemented!()
     }
 
-    fn choose_gather_row(&mut self, _view: &StateView2) -> usize {
+    fn choose_gather_row(&mut self, _view: &ViewOnGatheringRow) -> usize {
         unimplemented!()
     }
 }

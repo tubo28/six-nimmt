@@ -28,17 +28,11 @@ pub fn score(card: Card) -> Score {
     // }
 
     const SCORE_TABLE: [Score; 105] = [
-        0, 1, 1, 1, 1, 2, 1, 1, 1, 1,
-        3, 5, 1, 1, 1, 2, 1, 1, 1, 1,
-        3, 1, 5, 1, 1, 2, 1, 1, 1, 1,
-        3, 1, 1, 5, 1, 2, 1, 1, 1, 1,
-        3, 1, 1, 1, 5, 2, 1, 1, 1, 1,
-        3, 1, 1, 1, 1, 7, 1, 1, 1, 1,
-        3, 1, 1, 1, 1, 2, 5, 1, 1, 1,
-        3, 1, 1, 1, 1, 2, 1, 5, 1, 1,
-        3, 1, 1, 1, 1, 2, 1, 1, 5, 1,
-        3, 1, 1, 1, 1, 2, 1, 1, 1, 5,
-        3, 1, 1, 1, 1];
+        0, 1, 1, 1, 1, 2, 1, 1, 1, 1, 3, 5, 1, 1, 1, 2, 1, 1, 1, 1, 3, 1, 5, 1, 1, 2, 1, 1, 1, 1,
+        3, 1, 1, 5, 1, 2, 1, 1, 1, 1, 3, 1, 1, 1, 5, 2, 1, 1, 1, 1, 3, 1, 1, 1, 1, 7, 1, 1, 1, 1,
+        3, 1, 1, 1, 1, 2, 5, 1, 1, 1, 3, 1, 1, 1, 1, 2, 1, 5, 1, 1, 3, 1, 1, 1, 1, 2, 1, 1, 5, 1,
+        3, 1, 1, 1, 1, 2, 1, 1, 1, 5, 3, 1, 1, 1, 1,
+    ];
     debug_assert!(1 <= card && card <= 104);
     SCORE_TABLE[card as usize]
 }
@@ -143,10 +137,7 @@ impl GameManager {
             view.my_cards = player.cards.clone();
             let card = ai.choose_card(&view);
             // TODO: ログ出力をchoose_cardの実装に移す
-            println!(
-                "プレイヤー{}がカード{}を選びました",
-                id, card
-            );
+            println!("プレイヤー{}がカード{}を選びました", id, card);
             moves.push((id, card));
             chosed_cards.push(card);
         }
@@ -159,13 +150,16 @@ impl GameManager {
         }
     }
 
-    fn consume_card(&mut self, turn: usize, player_index: usize, card: Card, choosed_cards: &Vec<Card>) {
+    fn consume_card(
+        &mut self,
+        turn: usize,
+        player_index: usize,
+        card: Card,
+        choosed_cards: &Vec<Card>,
+    ) {
         let mut view = self.view_on_choose_gather_row(turn, choosed_cards);
 
-        println!(
-            "プレイヤー{}がカード{}を使います",
-            player_index, card
-        );
+        println!("プレイヤー{}がカード{}を使います", player_index, card);
         let row = self.field.max_lower(card);
         let row = if let Some(row) = row {
             // 置くべき列に置く
@@ -195,7 +189,7 @@ impl GameManager {
 
     /// my_cards が空なことに注意
     /// AI にわたすときにそのプレイヤーのものに置き換えること
-    fn view_on_choose_card(&self, turn: usize) -> StateView {
+    fn view_on_choose_card(&self, turn: usize) -> ViewOnChoosingCard {
         let mut all_used_cards = Vec::new();
         for cards in self.used_cards.iter() {
             for &card in cards.iter() {
@@ -204,7 +198,7 @@ impl GameManager {
         }
         all_used_cards.shrink_to_fit();
 
-        StateView {
+        ViewOnChoosingCard {
             turn: turn,
             field: self.field.clone(),
             scores: self.players.iter().map(|p| p.score).collect(),
@@ -215,7 +209,11 @@ impl GameManager {
 
     /// my_cards が空なことに注意
     /// AI にわたすときにそのプレイヤーのものに置き換えること
-    fn view_on_choose_gather_row(&self, turn: usize, choosed_cards: &Vec<Card>) -> StateView2 {
+    fn view_on_choose_gather_row(
+        &self,
+        turn: usize,
+        choosed_cards: &Vec<Card>,
+    ) -> ViewOnGatheringRow {
         let mut all_used_cards = Vec::new();
         for cards in self.used_cards.iter() {
             for &card in cards.iter() {
@@ -224,7 +222,7 @@ impl GameManager {
         }
         all_used_cards.shrink_to_fit();
 
-        StateView2 {
+        ViewOnGatheringRow {
             turn: turn,
             field: self.field.clone(),
             scores: self.players.iter().map(|p| p.score).collect(),
@@ -244,7 +242,7 @@ impl GameManager {
     }
 }
 
-pub struct StateView {
+pub struct ViewOnChoosingCard {
     pub turn: usize,
     pub field: Field,
     pub scores: Vec<Score>,
@@ -253,7 +251,7 @@ pub struct StateView {
 }
 
 // まともな名前にする
-pub struct StateView2 {
+pub struct ViewOnGatheringRow {
     pub turn: usize,
     pub field: Field,
     pub scores: Vec<Score>,
