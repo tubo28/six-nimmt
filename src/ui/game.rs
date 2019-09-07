@@ -41,7 +41,7 @@ pub struct GameManager {
     pub field: Field,
     pub used_cards: Vec<Vec<Card>>,
     pub players: Vec<Player>,
-    pub ais: Vec<Box<AI>>,
+    pub ais: Vec<Box<dyn AI>>,
 }
 
 // TODO: 4, 6, 10 などのマジックナンバーを const にする
@@ -56,7 +56,7 @@ impl GameManager {
     }
 
     /// カードをプレイヤーに10枚配り、フィールドに4枚置く
-    pub fn initialize(&mut self, seed: u64, players: Vec<Box<AI>>, cards: Vec<Card>) {
+    pub fn initialize(&mut self, seed: u64, players: Vec<Box<dyn AI>>, cards: Vec<Card>) {
         let player_number = players.len();
         assert!(player_number * 10 + 4 <= cards.len());
 

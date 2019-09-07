@@ -5,7 +5,7 @@ use six_nimmt::ui::game::GameManager;
 
 fn main() {
     let mut gm = GameManager::new();
-    let players: Vec<Box<AI>> = vec![
+    let players: Vec<Box<dyn AI>> = vec![
         Box::new(CLIPlayer::new("Alpha".to_string())),
         Box::new(RandomAI::new("Bravo".to_string(), 2)),
         Box::new(RandomAI::new("Charlie".to_string(), 3)),
